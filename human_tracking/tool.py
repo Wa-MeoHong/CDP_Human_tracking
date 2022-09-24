@@ -1,10 +1,12 @@
-# tool.py 
+# tool.py (v1.5.0)
 # 최초작성자 : 김민관 ( 2022.08.22 )
 # 마지막 수정자 : 신대홍 (2022.09.22)
 # 수정사항 : tool.py에 vesc코드 및 Servo모터  관련  기능 추가(22.09.18)
 #           LED관련 코드 주석처리 및 stop()의 위치를 옮김(22.09.21)
 #           무게와 모터방향을 고려해 전,후진 수정 및 vesc포트위치 수정
 #           전류값 2배 증가, 왼쪽모터 역방향회전으로 변경, 각도 미세수정(22.09.22)
+#           VESC 포트 변경(반대로 바꿈), VESC 전류값 다운, backward(좌, 우) 주석처리
+#               \ ChangeFrequency를 추가해봄
 
 import RPi.GPIO as GPIO
 import pyvesc as VESC
@@ -42,6 +44,7 @@ def pre():
     # 초기값 설정
     p = GPIO.PWM(servopin, 60)       #60Hz로 시작
     p.start(0)                    # duty_cycle은 0으로 설정
+    p.ChangeFrequency(0)            # 0Hz로 초기화
 
 
 def forword(): #빨간불
@@ -86,24 +89,24 @@ def backword(): #하얀불
         vesc1.write(VESC.encode(msgleft))
         vesc2.write(VESC.encode(msgright))
         
-    # 후진 (전진방향이 좌회전)
-    elif (flagleft == 1 and flagright == 0):
-        msgleft = VESC.SetCurrent(450)
-        msgright = VESC.SetCurrent(-500)
-        vesc1.write(VESC.encode(msgleft))
-        vesc2.write(VESC.encode(msgright))
+    # # 후진 (전진방향이 좌회전)
+    # elif (flagleft == 1 and flagright == 0):
+    #     msgleft = VESC.SetCurrent(450)
+    #     msgright = VESC.SetCurrent(-500)
+    #     vesc1.write(VESC.encode(msgleft))
+    #     vesc2.write(VESC.encode(msgright))
     
-    # 후진 (전진방향이 우회전)
-    elif (flagleft == 0 and flagright == 1):
-        msgleft = VESC.SetCurrent(500)
-        msgright = VESC.SetCurrent(-450)
-        vesc1.write(VESC.encode(msgleft))
-        vesc2.write(VESC.encode(msgright)) 
+    # # 후진 (전진방향이 우회전)
+    # elif (flagleft == 0 and flagright == 1):
+    #     msgleft = VESC.SetCurrent(500)
+    #     msgright = VESC.SetCurrent(-450)
+    #     vesc1.write(VESC.encode(msgleft))
+    #     vesc2.write(VESC.encode(msgright)) 
 
 
 # 좌회전, 우회전이 종료된 후, Servo 초기화
 def zero():
-    global flagleft, flagright, p
+    global flagleft, flagright
     # 만약 flagleft(좌회전)이 1이라면 0으로 바꾼다.
     if(flagleft == 1 ):
         flagleft = 0
@@ -168,7 +171,9 @@ def stop():
     vesc2.write(VESC.encode(message))
 
 def setangle(angle):
+    p.ChangeFreaquency(60)
     p.ChangeDutyCycle(angle)
+    p.ChangeFreaquency(0)
 
 
 #def main():

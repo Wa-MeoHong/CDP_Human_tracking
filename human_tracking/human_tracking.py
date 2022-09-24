@@ -23,7 +23,8 @@ version 1.3  - 사람의 BBox 설정에 따라 BBox의 가장 아래변을 y값�
 version 1.4  - 정지범위의 설정이 변경되었다.
 version 1.5  - GPIO설정이 수정되었다.
 version 1.6  - TPU가속 모듈이 추가되었다.
-latest version : 1.6.1
+version 1.6.2  - backward를 실행할 때, ServoMotor가 1자가 되도록 tl.zero()추가 (신대홍)
+latest version : 1.6.2
 작성자 : 김민관
 """
 
@@ -97,8 +98,6 @@ def track_object(objs, labels):
 
     x_deviation = round(0.5 - x_center, 3) #x축으로 부터 떨어진 거리
 
-    
-    
     x_right = 1-x_max
     print("right = ", x_right)
     x_left = 1-x_min
@@ -157,6 +156,7 @@ def move_robot_BLDC():
             Stop_flag = 1   #flag를 올린다.
             #time.sleep(delay)#서보모터 조정하는 시간동안 딜레이
             state = 2
+            tl.zero()           # 후진 전에 모터를 중앙으로 돌려놓는다.
             tl.backword() #GPIO 모터 후진   #BLDC모터를 회전시켜 후진한다.
 
     else:  #y축은 정지범위에 있다
