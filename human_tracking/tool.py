@@ -23,15 +23,15 @@ flagright = 0
 flagleft = 0
 
 #angle
-left_angle = 7.5
-center_angle = 9
+left_angle = 6.5
+center_angle = 8.5
 right_angle = 10.5
 
 def pre():
     global p, vesc1 , vesc2
     # vesc1(왼쪽), vesc2(오른쪽)
-    vesc1 = serial.Serial(port='/dev/ttyACM1', baudrate=115200, timeout=0.05)
-    vesc2 = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=0.05)
+    vesc1 = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=0.05)
+    vesc2 = serial.Serial(port='/dev/ttyACM1', baudrate=115200, timeout=0.05)
 
     # GPIO.setup(17,GPIO.OUT)         # 빨간불
     # GPIO.setup(27,GPIO.OUT)         # 파란불
@@ -54,22 +54,22 @@ def forword(): #빨간불
 
     #전진(기본, global변수 왼쪽, 오른쪽 없을 때)
     if (flagleft == 0 and flagright ==0):
-        msgleft = VESC.SetCurrent(-600)
-        msgright = VESC.SetCurrent(600)
+        msgleft = VESC.SetCurrent(-500)
+        msgright = VESC.SetCurrent(500)
         vesc1.write(VESC.encode(msgleft))
         vesc2.write(VESC.encode(msgright))
         
     #전진(죄회전)
     elif (flagleft == 1 and flagright == 0):
-        msgleft = VESC.SetCurrent(-550)
-        msgright = VESC.SetCurrent(600)
+        msgleft = VESC.SetCurrent(-450)
+        msgright = VESC.SetCurrent(500)
         vesc1.write(VESC.encode(msgleft))
         vesc2.write(VESC.encode(msgright))
 
     #전진(우회전)
     elif (flagleft == 0 and flagright == 1):
-        msgleft = VESC.SetCurrent(-600)
-        msgright = VESC.SetCurrent(550)
+        msgleft = VESC.SetCurrent(-500)
+        msgright = VESC.SetCurrent(450)
         vesc1.write(VESC.encode(msgleft))
         vesc2.write(VESC.encode(msgright))
 
@@ -81,29 +81,29 @@ def backword(): #하얀불
     
     #  후진 (기본)
     if (flagleft == 0 and flagright ==0):
-        msgleft = VESC.SetCurrent(600)
-        msgright = VESC.SetCurrent(-600)
+        msgleft = VESC.SetCurrent(500)
+        msgright = VESC.SetCurrent(-500)
         vesc1.write(VESC.encode(msgleft))
         vesc2.write(VESC.encode(msgright))
         
     # 후진 (전진방향이 좌회전)
     elif (flagleft == 1 and flagright == 0):
-        msgleft = VESC.SetCurrent(550)
-        msgright = VESC.SetCurrent(-600)
+        msgleft = VESC.SetCurrent(450)
+        msgright = VESC.SetCurrent(-500)
         vesc1.write(VESC.encode(msgleft))
         vesc2.write(VESC.encode(msgright))
     
     # 후진 (전진방향이 우회전)
     elif (flagleft == 0 and flagright == 1):
-        msgleft = VESC.SetCurrent(600)
-        msgright = VESC.SetCurrent(-550)
+        msgleft = VESC.SetCurrent(500)
+        msgright = VESC.SetCurrent(-450)
         vesc1.write(VESC.encode(msgleft))
         vesc2.write(VESC.encode(msgright)) 
 
 
 # 좌회전, 우회전이 종료된 후, Servo 초기화
 def zero():
-    global flagleft, flagright
+    global flagleft, flagright, p
     # 만약 flagleft(좌회전)이 1이라면 0으로 바꾼다.
     if(flagleft == 1 ):
         flagleft = 0
@@ -132,7 +132,6 @@ def right(): #파란불
         setangle(right_angle)
         #time.sleep(0.5)
 
-
 def left(): #녹색불
     global flagleft, flagright
     
@@ -143,6 +142,7 @@ def left(): #녹색불
         flagright = 0
         #time.sleep(delay)
         setangle(left_angle)
+
         #time.sleep(0.5)
 
 #초기값 설정
@@ -153,7 +153,7 @@ def init():
     # GPIO.output(27,False)
     # GPIO.output(23,False)
     setangle(center_angle)
-    
+
 # 정지
 def stop():
     # GPIO.output(22,False)
@@ -169,3 +169,17 @@ def stop():
 
 def setangle(angle):
     p.ChangeDutyCycle(angle)
+
+
+#def main():
+    #global flagleft, flagright
+    #pre()
+    #time.sleep(1)
+    #right()
+    #time.sleep(1)
+    #left()
+    #time.sleep(1)
+    #init()
+
+#if __name__ == "__main__" :
+    #main()
