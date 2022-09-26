@@ -3,7 +3,6 @@ CDP_Human_tracking is an Autonomous driving system that follows a person
 implemented in Python.
 
 Used pip module : tensorflow, tflite, tflite_runtime, opencv-python, numpy, pyvesc, pythoncrc, pyserial
-
 Used Devices : Raspberry PI, Servomotor, BLDCMotor, VESC, Google-Coral USB Accelerator
 
 tracking_master.py 
