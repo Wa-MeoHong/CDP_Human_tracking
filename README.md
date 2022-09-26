@@ -13,5 +13,5 @@ Human_tracking.py
   The core file containing the autonomous driving code, called through tracking_master.py
  
 common2.py
-  File to load edgeTPU TensorFlow model
+  File to load edgeTPU TensorFlow model, analyze images read through the camera to find people.
   
