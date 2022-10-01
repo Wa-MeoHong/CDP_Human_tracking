@@ -398,7 +398,7 @@ def move_robot_servo():
     #정지 또는 후진 상황에 사용되는 Stop_flag
     if(Stop_flag == 1):                         # Stop_flag가 올라왔음
         Servo_state = 0                         
-        tl.zero()                                 # GPIO 서보모터를 원래대로 되돌림
+        tl.init()                                 # GPIO 서보모터를 원래대로 되돌림
         # time.sleep(delay)
 
     else:
@@ -427,7 +427,7 @@ def move_robot_servo():
                 
         else:
             Servo_state = 0
-            tl.zero()                           # GPIO 서보모터를 회전시켜 바퀴를 11자로 만든다.
+            tl.init()                           # GPIO 서보모터를 회전시켜 바퀴를 11자로 만든다.
             time.sleep(delay)                   # 딜레이를 줘서 기기에 부담을 감소함
             Stop_flag = 1
             #time.sleep(delay)
