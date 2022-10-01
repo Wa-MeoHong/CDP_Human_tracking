@@ -24,9 +24,9 @@ flagright = 0
 flagleft = 0
 
 #angle
-left_angle = 7
-center_angle = 10
-right_angle = 13
+left_angle = 8
+center_angle = 9.5
+right_angle = 11
 
 # 초기값 설정 pre()함수
 def pre():
