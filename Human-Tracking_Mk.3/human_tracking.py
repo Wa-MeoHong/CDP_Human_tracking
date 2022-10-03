@@ -229,7 +229,7 @@ def resetPerson(objs, labels):
 def move_robot_BLDC():
     global x_deviation, stop_range, Stop_flag, cmd, y_max, BLDC_state
     # global x_min, x_max
-
+    cmd = ""
     delay = 1
     y=1-y_max                               # 밑변이 위치하는 길이
     
