@@ -29,7 +29,8 @@ version 1.6.4 - 정지 range에서 작용되는 경우를 3가지에서 4가지�
 version 1.7.0 - 사람이 2인 이상 잡히게 되면 이전의 사람을 계속 추적할 수 있게 알고리즘을 추가
 version 1.8.0 - motor_BLDC를 수정함 (Stop_flag를 먼저 수정 후, 작동하게끔 함) ( 22.10.01 )
 version 1.8.1 - Stop_flag를 3가지로 만들어 반대회전을 실현시킴, stop_range를 늘림 (22.10.02)
-latest version : 1.8.1
+version 1.9.0 - Semiflag를 추가하여 좀 더 세부적인 서보모터 조정을 실현시킴 (22.10.03)
+latest version : 1.9.0
 작성자 : 김민관, 신대홍
 """
 
@@ -242,9 +243,9 @@ def move_robot_BLDC():
      
     # 먼저 Stop_flag를 먼저 설정함 ( 전진할 때만 Stop_flag가 내려가고, 다른 상태는 올라감)
     
-    if (y >= (stop_range * 1.8)):                     # 전진 상태 (y >= stop_range * 1.8)
+    if (y >= (stop_range * 1.2)):                     # 전진 상태 (y >= stop_range * 1.8)
         Stop_flag = 0   
-    elif (y <= (stop_range / 2)):                   # 후진 상태 (y <= stop_range / 2)
+    elif (y <= (stop_range / 1.2)):                   # 후진 상태 (y <= stop_range / 2)
         Stop_flag = 2                  
     else:                                           # 그 이외의 상태 (y가 정지범위)
         Stop_flag = 1
@@ -255,7 +256,7 @@ def move_robot_BLDC():
     #     Stop_flag = 1
 
     # forward (전진)
-    if ((y >= (stop_range * 1.8))):                       # y가 전진범위 (stop_range * 1.8 너머)에 있으면
+    if ((y >= (stop_range * 1.2))):                       # y가 전진범위 (stop_range * 1.8 너머)에 있으면
         if(BLDC_state != 1):                        # BLDC_state가 전진상태가 아니라면 갱신
             BLDC_state = 1
             # time.sleep(delay)
@@ -264,7 +265,7 @@ def move_robot_BLDC():
             tl.forward()
 
     # backward (후진)
-    elif ((y <= ( stop_range/2 ))):                       # y가 후진범위 (stop_range / 2 너머)에 있으면
+    elif ((y <= ( stop_range/ 1.2 ))):                       # y가 후진범위 (stop_range / 2 너머)에 있으면
         if(BLDC_state != 2):                        # BLDC_state가 후진상태가 아니라면 갱신
             BLDC_state = 2
             # time.sleep(delay)
@@ -397,24 +398,50 @@ def move_robot_servo():
     y = 1- y_max
     delay = 0.5
     cmd = 0
-
+    Semiflag = 0
     # Servo_state도 전역변수로 사용 
-
+    # Semiflag ( 조금만 회전하기 위해 flag를 세움 )
+    # Semiflag = 0 ( 기본 ) 1 ( 0.75배 ), 2 ( 0.5배 ), 3 (0.25배 )
     # Stop_flag == 0 ( 정방향 회전 )
     if ( Stop_flag == 0) :
-        if ((x_deviation > stop_range)):            # 좌회전
+        # 좌회전
+        if ((x_deviation > (stop_range / 2))):
+            # 먼저, 점 중앙이 stop_range의 1/1.7배 이상의 위치에 있고,
+            # 위치에 따라 Semiflag를 조정한다.
+            if (x_deviation > (stop_range * 2)):
+                Semiflag = 0
+            elif (x_deviation > (stop_range * 1.4) ):
+                Semiflag = 1
+            elif (x_deviation > (stop_range / 1.3)):
+                Semiflag = 2
+            else:
+                Semiflag = 3
+
             Servo_state = 1
             cmd = "left"
-            tl.left()
-            time.sleep(delay)
-
-        elif ((x_deviation < -(stop_range))):       # 우회전
-            Servo_state = 2
-            cmd = "right"
-            tl.right()
+            tl.left(Semiflag)               # 대입
             time.sleep(delay)
         
-        else:                                       # 초기화(센터)
+        # 우회전
+        elif ((x_deviation < -(stop_range / 2))):
+            # 먼저, 점 중앙이 -(stop_range의 1 / 2배) 미만의 위치에 있고,
+            # 위치에 따라 Semiflag를 조정한다
+            if (x_deviation < -(stop_range * 2)):
+                Semiflag = 0
+            elif (x_deviation > -(stop_range * 1.4)):
+                Semiflag = 1
+            elif (x_deviation > -(stop_range / 1.3)):
+                Semiflag = 2
+            else:
+                Semiflag = 3
+
+            Servo_state = 2
+            cmd = "right"
+            tl.right(Semiflag)
+            time.sleep(delay)
+
+        # 초기화(센터)
+        else:
             Servo_state = 0
             cmd = "center"
             tl.init()
@@ -423,6 +450,7 @@ def move_robot_servo():
     
     # Stop_flag == 1 ( 역방향 회전 )
     elif ( Stop_flag == 1 ):
+        Semiflag = 0
         # 우회전
         if ((x_deviation > stop_range)):
             Servo_state = 2

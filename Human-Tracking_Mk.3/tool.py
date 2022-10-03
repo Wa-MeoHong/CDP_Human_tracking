@@ -7,6 +7,7 @@
 #           전류값 2배 증가, 왼쪽모터 역방향회전으로 변경, 각도 미세수정(22.09.22)
 #           VESC 포트 변경(반대로 바꿈), VESC 전류값 다운, backward(좌, 우) 주석처리
 #           zero()를 삭제함( init으로 역할을 통합시킴 (중앙으로 돌리기)) (22.10.01)
+#           Semiflag를 추가하여, 좀더 세부적인 서보모터 조정을 실현시킴 (22.10.03)
 
 import RPi.GPIO as GPIO
 import pyvesc as VESC
@@ -24,6 +25,7 @@ flagright = 0
 flagleft = 0
 
 #angle
+
 left_angle = 8.25
 center_angle = 9.75
 right_angle = 11.25
@@ -113,9 +115,11 @@ def backward(): #하얀불
     3) 좌회전 (left )
         - flagright = 0, flagleft = 1, 서보모터 상태 : left
 """
-# 좌회전, 우회전이 종료된 후, Servo 초기화
 
-def right(): #파란불
+# 좌회전, 우회전이 종료된 후, Servo 초기화
+# Semiflag(각도를 조금 꺾을 것인가)
+
+def right(Semiflag): #파란불
     global flagright, flagleft
 
     if (flagright != 1 ):
@@ -123,10 +127,11 @@ def right(): #파란불
         flagleft = 0  
         #time.sleep(delay)
     else:
-        setangle(right_angle)
-        #time.sleep(0.5)
+        Final_right = right_angle - (0.375 * Semiflag)
+        setangle(Final_right)
+            #time.sleep(0.5)
 
-def left(): #녹색불
+def left(Semiflag): #녹색불
     global flagleft, flagright
 
     if (flagleft != 1 ):    
@@ -134,7 +139,8 @@ def left(): #녹색불
         flagright = 0
         #time.sleep(delay)
     else:
-        setangle(left_angle)
+        Final_left = left_angle + (0.375 * Semiflag)
+        setangle(Final_left)
         #time.sleep(0.5)
 
 #초기값 설정
