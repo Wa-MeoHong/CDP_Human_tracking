@@ -43,6 +43,7 @@ import time
 from threading import Thread
 import sys, os
 
+import face as fc
 import tool as tl
 
 sys.path.insert(0, './')
@@ -455,7 +456,7 @@ def move_robot_servo():
         if ((x_deviation > stop_range)):
             Servo_state = 2
             cmd = "right"
-            tl.right()
+            tl.right(Semiflag)
             time.sleep(delay)
 
         elif ((x_deviation < -(stop_range))):       # 좌회전
@@ -559,8 +560,10 @@ def tracking():
         if cv2.waitKey(1) & 0xFF == ord('q'):           # 종료방법
             break
         #cv2.imshow('Preview', im)
-        im = cm.draw_overlays(im, objs, labels, arr_duration, arr_track_data, stop_range) 
-        cv2.imshow('Preview', im)
+        # im = cm.draw_overlays(im, objs, labels, arr_duration, arr_track_data, stop_range) 
+        # cv2.imshow('Preview', im)
+        # thread3 = Thread(target=fc.BomiFace)
+        # thread3.start()
 
         arr_duration[2] = time.time() - time_preview    # 미리보기하는데 걸리는 시간 계산
         #--------------------fps계산----------------------------------------
