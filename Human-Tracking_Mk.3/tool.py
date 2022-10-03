@@ -32,8 +32,8 @@ right_angle = 11.1
 def pre():
     global p, vesc1 , vesc2
     # vesc1(왼쪽), vesc2(오른쪽)
-    # vesc1 = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=0.05)
-    # vesc2 = serial.Serial(port='/dev/ttyACM1', baudrate=115200, timeout=0.05)
+    vesc1 = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=0.05)
+    vesc2 = serial.Serial(port='/dev/ttyACM1', baudrate=115200, timeout=0.05)
 
     GPIO.setup(servopin, GPIO.OUT)
 
@@ -81,8 +81,8 @@ def forward(): #빨간불
         msgleft = VESC.SetCurrent(500)
         msgright = VESC.SetCurrent(-500)
         
-    # vesc1.write(VESC.encode(msgleft))
-    # vesc2.write(VESC.encode(msgright))
+    vesc1.write(VESC.encode(msgleft))
+    vesc2.write(VESC.encode(msgright))
 
 def backward(): #하얀불
     global flagleft, flagright
@@ -100,8 +100,8 @@ def backward(): #하얀불
         msgleft = VESC.SetCurrent(-500)
         msgright = VESC.SetCurrent(500)
 
-    # vesc1.write(VESC.encode(msgleft))
-    # vesc2.write(VESC.encode(msgright))
+    vesc1.write(VESC.encode(msgleft))
+    vesc2.write(VESC.encode(msgright))
         
 """
     Servo모터 작동 형태
@@ -146,8 +146,8 @@ def init():
 def stop():
     #정지
     message = VESC.SetCurrent(0)
-    # vesc1.write(VESC.encode(message))
-    # vesc2.write(VESC.encode(message))
+    vesc1.write(VESC.encode(message))
+    vesc2.write(VESC.encode(message))
 
 def setangle(angle):
     p.ChangeDutyCycle(angle)
