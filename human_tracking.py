@@ -252,6 +252,9 @@ class Tracking :
             self.tl.init()
             time.sleep(delay)
         
+        arr_track_data[5]=cmd
+
+
 #------------------------------------------------------------
 #원본파일에는 여기서 로봇의 모터 스피드를 초기화한다.
 #------------------------------------------------------------
@@ -301,8 +304,8 @@ def find_target(obj, tempFlag):
     obj_x_center = round((obj_x_min + (obj_x_max - obj_x_min)/2), 3) #x축 중앙
     obj_y_center = round((obj_y_min + (obj_y_max - obj_y_min)/2), 3) #y축 중앙
     obj_position = [obj_x_center, obj_y_center, tempFlag]       # 리스트에 대입
-    return obj_position                                         # obj_중심의 데이터 반환
- 
+    return obj_position                                         # obj_중심의 데이터 반환 
+
 # Bbox의 넓이 체크
 def obj_area_check(obj, tempFlag):                              
     area = [0, 0]                                               # 넓이 리스트 
