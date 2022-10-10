@@ -112,6 +112,39 @@ class Tracking :
     y > 0.25 에서 전진
 
     """
+
+    """
+    Stop_Flag : 서보모터, BLDC공용 ( 정지(0), 전진(1), 후진(2) )
+    BLDC_state : 정지(0), 전진(1), 후진(2)
+    
+    1)BLDC모터를 움직이는 쓰레드
+        1) Stop_flag를 수정함 (전진범위에선 0, 나머지는 1)
+
+        2) BLDC_state를 통해 전진, 후진, 정지 상태를 보고있음
+            2-1) y가 stop_range * 2 ( 전진범위 )에 있음
+                - BLDC_state = 1이 아니면 1로 변경
+                - tool.py의 forward()를 실행
+            2-2) y가 stop_range / 2 ( 후진범위 )에 있음
+                - BLDC_state = 2가 아니면 2로 변경
+                - tool.py의 backward()를 실행
+            2-3) y가 정지범위에 있음
+                2-3-1) y는 정지범위, x는 회전범위에 있을 때(서보모터 돌아감)
+                    - 서보모터는 중앙으로 바꾸기 
+                    - 후진을 하여 좌/우회전 할 공간을 확보함
+                    - 다시 전진하여 사람을 중앙으로 맞춘다.
+                2-3-2) x, y 전부 정지범위에 있음 (서보모터가 중앙)
+                    - BLDC_state를 0로 강제로 변환
+                    - tool.py의 stop()을 실행
+    """
+
+    def CheckGotype(self, y):
+        if (y >= (stop_range * 1.2)):                     # 전진 상태 (y >= stop_range * 1.8)
+            self.Stop_flag = 1   
+        elif (y <= (stop_range / 1.2)):                   # 후진 상태 (y <= stop_range / 2)
+            self.Stop_flag = 2                  
+        else:                                             # 그 이외의 상태 (y가 정지범위)
+            self.Stop_flag = 0
+
     def SetBLDC(self):
         global cmd
         # forward ( 전진 )
@@ -132,13 +165,6 @@ class Tracking :
                 cmd = "revise"
                 self.BLDC_state = 2
                 self.tl.backward()                       # BLDC_state = 2, backward   
-    def CheckGotype(self, y):
-        if (y >= (stop_range * 1.2)):                     # 전진 상태 (y >= stop_range * 1.8)
-            self.Stop_flag = 1   
-        elif (y <= (stop_range / 1.2)):                   # 후진 상태 (y <= stop_range / 2)
-            self.Stop_flag = 2                  
-        else:                                             # 그 이외의 상태 (y가 정지범위)
-            self.Stop_flag = 0
     def move_robot_BLDC(self):
         global cmd
         cmd = ""
@@ -154,6 +180,23 @@ class Tracking :
 
         arr_track_data[4]=cmd
         arr_track_data[3]=y
+
+    """
+    2) 서보모터를 움직이는 쓰레드
+        - Stop_flag => 정방향 (0), 역방향 (1), 고정 (2)
+        - Servo_flag => 센터 (0), 좌회전 (1), 우회전 (2)
+    
+        2-1) Stop_flag == 0 (정방향회전) 
+            1. x_deviation(bBox중앙)가 stop_range보다 클 경우 (좌회전)
+            2. x_deviation(bBox중앙)가 -stop_range보다 작을 경우 ( 우회전 )
+            3. 중앙점이 1, 2사이인 경우 ( 중앙 초기화 )
+        2-2) Stop_flag == 1 (역방향회전, 후진할때 필요)
+            1. 2-1의 1.상황일경우 우회전
+            2. 2-1의 2.상황일경우 좌회전
+            3. 초기화
+        2-3) Stop_flag == 2 (중앙 초기화)
+            - 중앙으로 초기화
+    """
 
     def CheckSemiangle(self, x_dot):                       # 각도를 얼만큼 조절할 지 Semiflag를 조정하는함수
         if ((x_dot > (stop_range / 2)) or (x_dot < -(stop_range / 2))):
@@ -208,157 +251,7 @@ class Tracking :
             cmd = "center"
             self.tl.init()
             time.sleep(delay)
-
-    
-
-# def move_robot_servo():
-#     global x_deviation, stop_range, Stop_flag, y_max, Servo_state
-#     y = 1- y_max
-#     delay = 0.5
-#     cmd = 0
-#     # Servo_state도 전역변수로 사용 
-#     # Semiflag ( 조금만 회전하기 위해 flag를 세움 )
-#     # Semiflag = 0 ( 기본 ) 1 ( 0.75배 ), 2 ( 0.5배 ), 3 (0.25배 )
-#     # Stop_flag == 0 ( 정방향 회전 )
-#     if ( Stop_flag == 0) :
-#         # 좌회전
-#         if ((x_deviation > (stop_range / 2))):
-#             # 먼저, 점 중앙이 stop_range의 1/1.7배 이상의 위치에 있고,
-#             # 위치에 따라 Semiflag를 조정한다.
-#             if (x_deviation > (stop_range * 2)):
-#                 Semiflag = 0
-#             elif (x_deviation > (stop_range * 1.4) ):
-#                 Semiflag = 1
-#             elif (x_deviation > (stop_range / 1.3)):
-#                 Semiflag = 2
-#             else:
-#                 Semiflag = 3
-
-#             Servo_state = 1
-#             cmd = "left"
-#             tl.left(Semiflag)               # 대입
-#             time.sleep(delay)
         
-#         # 우회전
-#         elif ((x_deviation < -(stop_range / 2))):
-#             # 먼저, 점 중앙이 -(stop_range의 1 / 2배) 미만의 위치에 있고,
-#             # 위치에 따라 Semiflag를 조정한다
-#             if (x_deviation < -(stop_range * 2)):
-#                 Semiflag = 0
-#             elif (x_deviation > -(stop_range * 1.4)):
-#                 Semiflag = 1
-#             elif (x_deviation > -(stop_range / 1.3)):
-#                 Semiflag = 2
-#             else:
-#                 Semiflag = 3
-
-#             Servo_state = 2
-#             cmd = "right"
-#             tl.right(Semiflag)
-#             time.sleep(delay)
-
-#         # 초기화(센터)
-#         else:
-#             Servo_state = 0
-#             cmd = "center"
-#             tl.init()
-#             time.sleep(delay)
-#             Stop_flag = 2
-    
-#     # Stop_flag == 1 ( 역방향 회전 )
-#     elif ( Stop_flag == 1 ):
-#         Semiflag = 0
-#         # 우회전
-#         if ((x_deviation > stop_range)):
-#             Servo_state = 2
-#             cmd = "right"
-#             tl.right(Semiflag)
-#             time.sleep(delay)
-
-#         elif ((x_deviation < -(stop_range))):       # 좌회전
-#             Servo_state = 1
-#             cmd = "left"
-#             tl.left()
-#             time.sleep(delay)
-
-#         else:                                       # 초기화
-#             Servo_state = 0
-#             cmd = "center"
-#             tl.init()
-#             time.sleep(delay)
-#             Stop_flag = 2
-#     # Stop_flag == 2 ( 서보모터 초기화 )
-#     else :
-#         Servo_state = 0
-#         cmd = "center"
-#         tl.init()
-#         time.sleep(delay)
-#         Stop_flag = 2
-
-      
-
-
-
-    #     def move_robot_BLDC(self):
-    #     # global x_deviation, stop_range, Stop_flag, cmd, y_max, BLDC_state
-    #     global cmd
-    #     cmd = ""
-    #     # delay = 1
-    #     y=1-(self.y_max)                          # 밑변이 위치하는 길이
-    #     print("y = ", y)
-
-    #     # BLDC 상태: 1 = 전진중, 2 = 후진중 0 = 정지        
-    #     # 먼저 Stop_flag를 먼저 설정함 ( 전진할 때만 Stop_flag가 내려가고, 다른 상태는 올라감)
-        
-
-    #     # if (y >= (stop_range * 1.2)):                     # 전진 상태 (y >= stop_range * 1.8)
-    #     #     self.Stop_flag = 0   
-    #     # elif (y <= (stop_range / 1.2)):                   # 후진 상태 (y <= stop_range / 2)
-    #     #     self.Stop_flag = 2                  
-    #     # else:                                             # 그 이외의 상태 (y가 정지범위)
-    #     #     self.Stop_flag = 1
-
-
-    #     # forward (전진)
-    #     if ((y >= (stop_range * 1.2))):                       # y가 전진범위 (stop_range * 1.8 너머)에 있으면
-    #         if(self.BLDC_state != 1):                         # BLDC_state가 전진상태가 아니라면 갱신
-    #             self.BLDC_state = 1
-    #             # time.sleep(delay)
-    #         else:                                       # BLDC_state가 전진상태이면 전진
-    #             cmd = "forward"                         # 전진 상태
-    #             self.tl.forward()
-
-    #     # backward (후진)
-    #     elif ((y <= ( stop_range / 1.2 ))):                       # y가 후진범위 (stop_range / 2 너머)에 있으면
-    #         if(self.BLDC_state != 2):                        # BLDC_state가 후진상태가 아니라면 갱신
-    #             self.BLDC_state = 2
-    #             # time.sleep(delay)
-    #         else:                                       # BLDC_state가 후진상태이면 후진
-    #             cmd = "backward"                        # 후진 상태
-    #             self.tl.backward()
-    
-    # # 정지범위 내 (stop range 내)
-    #     else:
-    #         if((x_deviation>stop_range) or (x_deviation< -(stop_range))):
-    #             # 상태 1: y범위는 정지범위 내, x 범위는 서보모터가 회전해야하는 상태(좌, 우회전)
-    #             if (self.BLDC_state != 2):                   # 후진해야하므로 BLDC_state를 설정
-    #                 self.BLDC_state = 2
-    #                 # time.sleep(delay)
-    #             else:                                   # 회전을 위한 후진 (revise)
-    #                 cmd = "revise"
-    #                 self.tl.backward()                       # BLDC_state = 2, backward
-    #         else:
-    #             # 상태 2 : y 정지범위 내, x 서보모터가 중앙 
-    #             if (self.BLDC_state != 0):                   # BLDC_state를 정지상태로 전환
-    #                 self.BLDC_state = 0
-    #                 # time.sleep(delay)
-    #             else:                                   # 정지 
-    #                 cmd = "stop"
-    #                 self.tl.stop()
-
-
-        
-
 #------------------------------------------------------------
 #원본파일에는 여기서 로봇의 모터 스피드를 초기화한다.
 #------------------------------------------------------------
